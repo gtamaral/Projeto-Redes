@@ -3,9 +3,9 @@
 1. Criacao de um server socket: OK
 2. Criacao de um client socket: OK
 3. Conseguir trafegar informacoes entre o cliente e o servidor OK
-4. Utilizacao do browser para comunicar com o servidor
-5. Servir paginas estaticas, hmtl, css, js, e imagens.
-6. Implementar Multithreading para servir requisições simultâneas
+4. Utilizacao do browser para comunicar com o servidor OK
+5. Servir paginas estaticas, hmtl, css, js, e imagens. OK
+6. Implementar Multithreading para servir requisições simultâneas OK
 7. Implementar Páginas Dinâmicas - executar scripts Python no backend
 
 # O que faz um servidor web?

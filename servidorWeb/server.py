@@ -1,5 +1,7 @@
 import socket      # importando a biblioteca socket
 import sys
+from threading import Thread
+
 
 enderecoServer = '0.0.0.0'
 portaServer = 8000
@@ -7,20 +9,7 @@ portaServer = 8000
 type_arquivoBinario = ['png', 'jpeg', 'bmp']
 type_arquivoTexto = ['html', 'css', 'js']
 
-socket_servidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# cria um objeto socket e passa como para parametro 02 argumentos
-# AFINET = IP // socket_stream = tcp ===> tcp/ip
-
- # solicita ao windows para que escute na porta 8000 atraves do metodo "BIND"
-socket_servidor.bind((enderecoServer, portaServer))    # o primeiro argumento serve para ouvir em todas as placas de redes disponiveis
-socket_servidor.listen()
-
-while True:
-    # aguardo uma conexao com o client
-    print(f'servidor ouvindo em {enderecoServer} : {portaServer} pronto para receber as conexoes')    # ouput
-    socket_client, client_addr = socket_servidor.accept()
-    # a funcao accept retorna o endereco ipv4 e a porta de origigem do mesmo
-
+def processa_solicitacao(socket_client, client_addr):
     # output
     print(f'cliente se conextou com exito. {client_addr[0]}: {client_addr[1]}')
 
@@ -56,7 +45,7 @@ while True:
         print(f'Arquivo não existe {arquivo_solicitado}')
         socket_client.sendall(b'HTTP/1.1 404 File not found\r\n\r\nFile not found')
         socket_client.close()
-        continue
+        return
 
     # resposta ao browser
     cabecalho_resposta = f'HTTP/1.1 200 OK\r\n\r\n'
@@ -71,5 +60,24 @@ while True:
    
     # encerrando a cnx
     socket_client.close()
+
+
+socket_servidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# cria um objeto socket e passa como para parametro 02 argumentos
+# AFINET = IP // socket_stream = tcp ===> tcp/ip
+
+ # solicita ao windows para que escute na porta 8000 atraves do metodo "BIND"
+socket_servidor.bind((enderecoServer, portaServer))    # o primeiro argumento serve para ouvir em todas as placas de redes disponiveis
+socket_servidor.listen(10)
+
+while True:
+    # aguardo uma conexao com o client
+    print(f'servidor ouvindo em {enderecoServer} : {portaServer} pronto para receber as conexoes')    # ouput
+    socket_client, client_addr = socket_servidor.accept()
+    # a funcao accept retorna o endereco ipv4 e a porta de origigem do mesmo
+
+    #  enviando a requisicao para a thread processa-la
+    Thread(target=processa_solicitacao, args=(socket_client, client_addr)).start()
+
 
 socket_servidor.close()
