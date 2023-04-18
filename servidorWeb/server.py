@@ -1,13 +1,14 @@
 import socket      # importando a biblioteca socket
 import sys
 from threading import Thread
-
+import subprocess
 
 enderecoServer = '0.0.0.0'
 portaServer = 8000
 
 type_arquivoBinario = ['png', 'jpeg', 'bmp']
 type_arquivoTexto = ['html', 'css', 'js']
+type_arquivoExecutavel = ['php', 'py', 'pl']
 
 def processa_solicitacao(socket_client, client_addr):
     # output
@@ -29,12 +30,23 @@ def processa_solicitacao(socket_client, client_addr):
     extensao = arquivo_solicitado.split('.')[-1]
     
     arquivoBinario = False
+    arquivoExecutavel = False
+    
+    if extensao in ['py']:
+        arquivoExecutavel = True
     if extensao in type_arquivoBinario:
         arquivoBinario = True
 
     # abrir o arquivo
     try:
-        if arquivoBinario:
+        if arquivoExecutavel:
+            processo = subprocess.run(['python', arquivo_solicitado], stdout=subprocess.PIPE, text = True)
+            stdout = processo.stdout
+            headers = f'HTTP/1.1 200 OK\r\n\r\n'
+            answer = headers + stdout
+            socket_client.sendall(answer.encode('utf-8'))
+            return True
+        elif arquivoBinario:
             file = open(arquivo_solicitado, 'rb')
         else:
             file = open(arquivo_solicitado, 'r', encoding = 'utf-8')    
