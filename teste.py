@@ -48,50 +48,20 @@ def processa_solicitacao(socket_client, client_addr):
             return True
         elif arquivoBinario:
             file = open(arquivo_solicitado, 'rb')
+            bloco = file.read(1024)  # ler em blocos de 1024 bytes
+            while bloco:
+                socket_client.send(bloco)
+                bloco = file.read(1024)
+            file.close()
         else:
-            file = open(arquivo_solicitado, 'r', encoding = 'utf-8')    
-        conteudo_arquivo = file.read()
+            file = open(arquivo_solicitado, 'r', encoding = 'utf-8')
+            bloco = file.read(1024)  # ler em blocos de 1024 bytes
+            while bloco:
+                socket_client.send(bloco.encode('utf-8'))
+                bloco = file.read(1024)
+            file.close()
 
     # quando o arquivo nao é encontrado == error404
     except FileNotFoundError:
         print(f'Arquivo não existe {arquivo_solicitado}')
-        socket_client.sendall(b'HTTP/1.1 404 File not found\r\n\r\nFile not found')
-        socket_client.close()
-        return
-
-    # resposta ao browser
-    cabecalho_resposta = f'HTTP/1.1 200 OK\r\n\r\n'
-    corpo_resposta = conteudo_arquivo
-
-    if arquivoBinario:
-        resposta_final = bytes(cabecalho_resposta, 'utf-8') + corpo_resposta
-        socket_client.sendall(resposta_final)   #responde p o cliente
-    else:
-        resposta_final = cabecalho_resposta + corpo_resposta
-        socket_client.sendall(resposta_final.encode('utf-8'))   #responde p o cliente
-   
-    # encerrando a cnx
-    socket_client.close()
-
-
-socket_servidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# cria um objeto socket e passa como para parametro 02 argumentos
-# AFINET = IP // socket_stream = tcp ===> tcp/ip
-
- # solicita ao windows para que escute na porta 8000 atraves do metodo "BIND"
-socket_servidor.bind((enderecoServer, portaServer))    # o primeiro argumento serve para ouvir em todas as placas de redes disponiveis
-socket_servidor.listen(10)
-
-while True:
-    # aguardo uma conexao com o client
-    print(f'servidor ouvindo em {enderecoServer} : {portaServer} pronto para receber as conexoes')    # ouput
-    socket_client, client_addr = socket_servidor.accept()
-    # a funcao accept retorna o endereco ipv4 e a porta de origigem do mesmo
-
-    #  enviando a requisicao para a thread processa-la
-    Thread(target=processa_solicitacao, args=(socket_client, client_addr)).start()
-
-
-socket_servidor.close()
-
-#testematheus
+        socket_client.sendall(b'HTTP/1.1 404 File not found\r\n\r\nFile
