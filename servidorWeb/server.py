@@ -38,6 +38,8 @@ def processa_solicitacao(socket_client, client_addr):
     arquivoBinario = False
     if extensao in type_arquivoBinario:
         arquivoBinario = True
+    
+    
 
     # abrir o arquivo
     try:
@@ -59,7 +61,7 @@ def processa_solicitacao(socket_client, client_addr):
         socket_client.sendall(b'HTTP/1.1 400 Bad Request\r\n\r\nBad Request')
         socket_client.close()
         return
-
+    
     # Verifica se o arquivo possui permissão de leitura
     if not file.readable():
         print(f'Erro de permissão na leitura do arquivo {arquivo_solicitado}')
@@ -108,3 +110,6 @@ while True:
 
 socket_servidor.close()
 #testeteste
+#teste
+#testeeeeeeeeeeeeee1
+#testando
