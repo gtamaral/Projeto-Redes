@@ -1,14 +1,13 @@
 import socket      # importando a biblioteca socket
 import sys
 from threading import Thread
-import subprocess
+
 
 enderecoServer = '0.0.0.0'
 portaServer = 8000
 
 type_arquivoBinario = ['png', 'jpeg', 'bmp']
 type_arquivoTexto = ['html', 'css', 'js']
-type_arquivoExecutavel = ['php', 'py', 'pl']
 
 def processa_solicitacao(socket_client, client_addr):
     # output
@@ -26,27 +25,23 @@ def processa_solicitacao(socket_client, client_addr):
     arquivo_solicitado = header_get.split(' ') [1] [1:] # transformando a primeira linha em um array, pegando o segundo elemento e eliminando o primeiro caracter que seria "/"
     print (f'Arquivo solicitado: {arquivo_solicitado}')
 
+    # Verifica se o arquivo solicitado é o arquivo bloqueado
+    if arquivo_solicitado == 'arquivo_bloqueado.html':
+        print(f'Acesso negado ao arquivo {arquivo_solicitado}')
+        socket_client.sendall(b'HTTP/1.1 403 Forbidden\r\n\r\nForbidden')
+        socket_client.close()
+        return
+
     # obtendo extensao do arquivo
     extensao = arquivo_solicitado.split('.')[-1]
     
     arquivoBinario = False
-    arquivoExecutavel = False
-    
-    if extensao in ['py']:
-        arquivoExecutavel = True
     if extensao in type_arquivoBinario:
         arquivoBinario = True
 
     # abrir o arquivo
     try:
-        if arquivoExecutavel:
-            processo = subprocess.run(['python', arquivo_solicitado], stdout=subprocess.PIPE, text = True)
-            stdout = processo.stdout
-            headers = f'HTTP/1.1 200 OK\r\n\r\n'
-            answer = headers + stdout
-            socket_client.sendall(answer.encode('utf-8'))
-            return True
-        elif arquivoBinario:
+        if arquivoBinario:
             file = open(arquivo_solicitado, 'rb')
         else:
             file = open(arquivo_solicitado, 'r', encoding = 'utf-8')    
@@ -58,6 +53,20 @@ def processa_solicitacao(socket_client, client_addr):
         socket_client.sendall(b'HTTP/1.1 404 File not found\r\n\r\nFile not found')
         socket_client.close()
         return
+    
+    except:
+        print(f'Erro na requisição {arquivo_solicitado}')
+        socket_client.sendall(b'HTTP/1.1 400 Bad Request\r\n\r\nBad Request')
+        socket_client.close()
+        return
+
+    # Verifica se o arquivo possui permissão de leitura
+    if not file.readable():
+        print(f'Erro de permissão na leitura do arquivo {arquivo_solicitado}')
+        socket_client.sendall(b'HTTP/1.1 403 Forbidden\r\n\r\nForbidden')
+        socket_client.close()
+        return
+    file.close()
 
     # resposta ao browser
     cabecalho_resposta = f'HTTP/1.1 200 OK\r\n\r\n'
@@ -67,6 +76,11 @@ def processa_solicitacao(socket_client, client_addr):
         resposta_final = bytes(cabecalho_resposta, 'utf-8') + corpo_resposta
         socket_client.sendall(resposta_final)   #responde p o cliente
     else:
+        if cabecalho_resposta.startswith('HTTP/1.0'):
+            print(f'Versão HTTP não suportada: {cabecalho_resposta}')
+            socket_client.sendall(b'HTTP/1.1 505 HTTP Version Not Supported\r\n\r\nHTTP Version Not Supported')
+            socket_client.close()
+            return
         resposta_final = cabecalho_resposta + corpo_resposta
         socket_client.sendall(resposta_final.encode('utf-8'))   #responde p o cliente
    
@@ -82,7 +96,7 @@ socket_servidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_servidor.bind((enderecoServer, portaServer))    # o primeiro argumento serve para ouvir em todas as placas de redes disponiveis
 socket_servidor.listen(10)
 
-while True:
+while True:  
     # aguardo uma conexao com o client
     print(f'servidor ouvindo em {enderecoServer} : {portaServer} pronto para receber as conexoes')    # ouput
     socket_client, client_addr = socket_servidor.accept()
@@ -93,5 +107,3 @@ while True:
 
 
 socket_servidor.close()
-
-#testematheus
