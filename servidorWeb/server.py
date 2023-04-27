@@ -61,7 +61,11 @@ def processa_solicitacao(socket_client, client_addr):
         socket_client.sendall(b'HTTP/1.1 400 Bad Request\r\n\r\nBad Request')
         socket_client.close()
         return
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 69e31968d30db978685970754416afff387753e4
     # Verifica se o arquivo possui permissão de leitura
     if not file.readable():
         print(f'Erro de permissão na leitura do arquivo {arquivo_solicitado}')
@@ -108,8 +112,12 @@ while True:
     Thread(target=processa_solicitacao, args=(socket_client, client_addr)).start()
 
 
+<<<<<<< HEAD
 socket_servidor.close()
 #testeteste
 #teste
 #testeeeeeeeeeeeeee1
 #testando
+=======
+socket_servidor.close()
+>>>>>>> 69e31968d30db978685970754416afff387753e4
